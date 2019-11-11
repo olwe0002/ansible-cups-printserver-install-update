@@ -1,0 +1,53 @@
+- name: set timezone
+  shell: timedatectl set-timezone "{{ printserver.timezone }}"
+
+- name: populate service facts
+  service_facts:
+
+- name: set default value
+  set_fact:
+    cups_is_installed: false
+
+- name: check if service is existing
+  set_fact:
+    cups_is_installed: true
+  when: ansible_facts.services[printserver.service_name] is defined
+
+- name: install packages
+  apt: 
+    name: "{{ printserver.apt_packages }}"
+    state: present
+    force_apt_get: yes
+
+- name: "add {{ printserver.os_user.name }} user to lpadmin group"
+  user:
+    name: "{{ printserver.os_user.name }}"
+    groups: lpadmin
+    state: present
+
+- name: "create {{ printserver.config_file }}"
+  template:
+    src: "templates/{{ printserver.config_file | basename }}.j2"
+    dest: "{{ printserver.config_file }}"
+    owner: root
+    group: root
+    mode: 0644
+  when: not cups_is_installed
+
+- name: "restart and enable {{ printserver.service_name }} service"
+  service: 
+    name: "{{ printserver.service_name }}"
+    state: restarted
+    enabled: yes
+  when: not cups_is_installed
+
+- name: call healthcheck
+  include_role:
+    name: healthcheck
+  vars:
+    healthcheck_urls: "{{ printserver.healthcheck_urls }}"
+
+- debug: 
+   msg:
+    - "open in your browser to setup your printer: {{ printserver.healthcheck_urls }}"
+  when: not cups_is_installed

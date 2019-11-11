@@ -1,0 +1,20 @@
+printserver:
+
+  config_file: /etc/cups/cupsd.conf
+  service_name: cups.service
+
+  healthcheck_urls: 
+    - "http://{{ fqdn }}:631"
+  
+  os_user:
+    name: pi
+
+  apt_packages:
+    - cups
+    - usbutils # for debugging
+    - hplip # hp printers
+    #- openprinting-ppds-postscript-ricoh # ricoh printers
+    #- printer-driver-splix # samsung printers
+    #- printer-driver-escpr # epson printers
+  
+  timezone: Europe/Berlin

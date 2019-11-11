@@ -1,0 +1,2 @@
+[printserver]
+<server> ansible_user=<user>
